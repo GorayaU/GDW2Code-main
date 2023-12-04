@@ -3,13 +3,13 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
     [Header("Movement")]
-    [SerializeField] private float SpeedFactor = 5;
+    [SerializeField] private float SpeedFactor;
     [SerializeField] private float JumpForce;
     [SerializeField] private LayerMask GroundLayers;
     [Header("Other Objects")]
     [SerializeField] private Boss Boss;
     [SerializeField] private GameObject BulletPrefab;
-    [SerializeField] private PlayerCollision pc;
+    [SerializeField] private PlayerCollision PC;
     [Header("Player Settings")]
     [SerializeField] private int Health;
 
@@ -56,8 +56,7 @@ public class Player : MonoBehaviour
     {
         if (collision.transform.CompareTag("Side Block"))
         {
-            DetachChild();
-            Destroy(gameObject);
+            PC.GameOver();
         }
         else if (collision.transform.CompareTag("bullets"))
         {
@@ -69,6 +68,7 @@ public class Player : MonoBehaviour
     {
         if (collision.transform.CompareTag("Enter Fight"))
         {
+            JumpForce = 6;
             inFight = !inFight;
             Boss.inBossFight = !Boss.inBossFight;
             ImputManager.inFight = !ImputManager.inFight;
@@ -121,7 +121,7 @@ public class Player : MonoBehaviour
         Health -= dmg;
         if (Health <= 0)
         {
-            PlayerCollision.GameOver();
+            PC.GameOver();
         }
     }
 }

@@ -7,6 +7,7 @@ public class Boss : MonoBehaviour
     [SerializeField] private GameObject Player;
     [SerializeField] private GameObject objectPrefab;
     [SerializeField] private Player PCode;
+    [SerializeField] private PlayerCollision PC;
     [Header("Bullet Options")]
     [SerializeField] private float launchDelay = 2f;
     [SerializeField] private float launchSpeed = 10f;
@@ -32,8 +33,7 @@ public class Boss : MonoBehaviour
 
             if (timer >= timeLimit)
             {
-                PCode.DetachChild();
-                Destroy(Player);
+                PC.GameOver();
             }
             else if (timer >= timeLimit / 2)
             {
@@ -92,7 +92,7 @@ public class Boss : MonoBehaviour
     private void LaunchObject(Vector3 targetPosition)
     {
         Vector2 launchDirection = (targetPosition - transform.position).normalized;
-        Vector3 pos = new Vector3(transform.position.x - 2, transform.position.y);
+        Vector3 pos = new Vector3(transform.position.x - 3.5f, transform.position.y);
         GameObject launchedObject = Instantiate(objectPrefab, pos, Quaternion.identity);
         launchedObject.GetComponent<Rigidbody2D>().AddForce(launchDirection * launchSpeed, ForceMode2D.Impulse);
 

@@ -14,17 +14,15 @@ public class PlayerCollision : MonoBehaviour
         {
             GameOver();
         }
-
-        
     }
     public void GameOver()
     {
-        GameOverUI.SetActive(true);
         Time.timeScale = 0f;
+        GameOverUI.SetActive(true);
         GameIsOver = true;
     }
 
-     public void LoadMenu()
+    public void LoadMenu()
      {
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
