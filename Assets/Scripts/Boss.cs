@@ -3,48 +3,81 @@ using UnityEngine;
 
 public class Boss : MonoBehaviour
 {
-    [SerializeField] private GameObject Player; // The GameObject whose trajectory you want to calculate
-    [SerializeField] private GameObject objectPrefab; // The GameObject you want to launch
+    [Header("Other Objects")]
+    [SerializeField] private GameObject Player;
+    [SerializeField] private GameObject objectPrefab;
     [SerializeField] private Player PCode;
-    [SerializeField] private float launchDelay = 2f; // The delay before launching the object
-    [SerializeField] private float launchSpeed = 10f; // The speed at which the object will be launched
+    [Header("Bullet Options")]
+    [SerializeField] private float launchDelay = 2f;
+    [SerializeField] private float launchSpeed = 10f;
     [SerializeField] private float maxPredictionTime = 0.75f;
     [SerializeField] private float timeLimit = 40f;
-
-    public bool inBossFight = false; // Variable to control if the boss is in a fight
+    [Header("For Other Scripts")]
+    public bool inBossFight;
+    public bool inFlight;
+    [Header("Boss Settings")]
+    [SerializeField] private float Health = 250;
 
     private float timer;
     private float timer1;
+    private float count;
+    private int maxBurst = 5;
+
     private void Update()
     {
         if (inBossFight)
         {
             timer += Time.deltaTime;
             timer1 += Time.deltaTime;
-            Debug.Log(timer);
-            Debug.Log(timer1);
+
             if (timer >= timeLimit)
             {
                 PCode.DetachChild();
                 Destroy(Player);
             }
+            else if (timer >= timeLimit / 2)
+            {
+                maxBurst = 10;
+                launchDelay = 0.25f;
+            }
             if (timer1 >= launchDelay)
             {
-                LaunchObjectDelayed();
+                count++;
+                if (count > 0 && count <= maxBurst)
+                {
+                    LaunchObjectDelayed();
+                }
+                else if (count > maxBurst)
+                {
+                    count = -1;
+                }
                 timer1 = 0;
             }
         }
     }
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.transform.CompareTag("bullets"))
+        {
+            Destroy(collision.gameObject);
+            HealthCheck(5);
+        }
+    }
     private void LaunchObjectDelayed()
     {
-
-        Vector2 targetVelocity = new Vector2(Player.GetComponent<Rigidbody2D>().velocity.x, math.clamp(-Player.GetComponent<Rigidbody2D>().velocity.y, -5, 1));
+        Vector2 targetVelocity;
+        if (!inFlight)
+        {
+            targetVelocity = new Vector2(Player.GetComponent<Rigidbody2D>().velocity.x, math.clamp(-Player.GetComponent<Rigidbody2D>().velocity.y, -5, 1));
+        }
+        else
+        {
+            targetVelocity = new Vector2(Player.GetComponent<Rigidbody2D>().velocity.x, math.clamp(Player.GetComponent<Rigidbody2D>().velocity.y, -5, 1));
+        }
 
         Vector3 predictedPosition = PredictTargetPosition(Player.transform.position, targetVelocity, objectPrefab.transform.position, launchSpeed);
         LaunchObject(predictedPosition);
-
     }
-
     private Vector2 PredictTargetPosition(Vector2 targetPosition, Vector2 targetVelocity, Vector2 launchPosition, float launchSpeed)
     {
         Vector2 targetOffset = targetPosition - launchPosition;
@@ -56,15 +89,21 @@ public class Boss : MonoBehaviour
 
         return predictedPosition;
     }
-
     private void LaunchObject(Vector3 targetPosition)
     {
         Vector2 launchDirection = (targetPosition - transform.position).normalized;
-
-        GameObject launchedObject = Instantiate(objectPrefab, transform.position, Quaternion.identity);
-        Rigidbody2D rb = launchedObject.GetComponent<Rigidbody2D>();
-        rb.AddForce(launchDirection * launchSpeed, ForceMode2D.Impulse);
+        Vector3 pos = new Vector3(transform.position.x - 2, transform.position.y);
+        GameObject launchedObject = Instantiate(objectPrefab, pos, Quaternion.identity);
+        launchedObject.GetComponent<Rigidbody2D>().AddForce(launchDirection * launchSpeed, ForceMode2D.Impulse);
 
         Destroy(launchedObject, 3);
+    }
+    private void HealthCheck(int dmg)
+    {
+        Health -= dmg;
+        if (Health <= 0)
+        {
+            Destroy(gameObject);
+        }
     }
 }
